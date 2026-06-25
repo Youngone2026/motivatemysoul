@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motivate My Soul — Pull a Card</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold: #C9A84C;
+    --white-accent: #E8E8E0;
+    --card-bg: #1A1A1A;
+    --cream: #F5F0E8;
+    --muted: #888880;
+    --subtle: #444440;
+    --border: #2E2E2E;
+    --font-serif: Georgia, 'Times New Roman', serif;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  }
+
+  html, body {
+    min-height: 100%;
+    background: #0D0D0D;
+    font-family: var(--font-sans);
+    color: var(--cream);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  .brand {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .brand-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .brand-title {
+    font-size: 32px;
+    font-weight: 500;
+    font-family: var(--font-serif);
+    color: var(--cream);
+    line-height: 1.1;
+  }
+  .brand-italic {
+    font-size: 24px;
+    font-style: italic;
+    color: var(--gold);
+    font-family: var(--font-serif);
+    display: block;
+    margin-top: 2px;
+  }
+  .brand-rule {
+    width: 32px;
+    height: 1px;
+    background: var(--gold);
+    margin: 12px auto;
+  }
+  .brand-author {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .app-wrap {
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .draw-screen {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .intro-text {
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.7;
+    max-width: 300px;
+  }
+
+  .deck-stack {
+    position: relative;
+    width: 190px;
+    height: 308px;
+    cursor: pointer;
+  }
+  .deck-shadow {
+    position: absolute;
+    border-radius: 14px;
+    background: #1A1A1A;
+    border: 0.5px solid #222;
+  }
+  .deck-face {
+    position: absolute;
+    width: 180px;
+    height: 292px;
+    top: 8px;
+    left: 5px;
+    border-radius: 14px;
+    background: var(--card-bg);
+    border: 0.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: transform 0.2s ease;
+  }
+  .deck-stack:hover .deck-face { transform: translateY(-6px); }
+  .deck-inner {
+    position: absolute;
+    inset: 14px;
+    border: 0.5px solid #2A2A2A;
+    border-radius: 8px;
+    pointer-events: none;
+  }
+  .deck-star { font-size: 18px; color: var(--gold); }
+  .deck-eyebrow { font-size: 9px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; }
+  .deck-main { font-size: 22px; font-weight: 500; font-family: var(--font-serif); color: var(--cream); text-align: center; line-height: 1.2; }
+  .deck-sub { font-size: 14px; color: var(--gold); font-style: italic; font-family: var(--font-serif); }
+  .deck-line { width: 22px; height: 0.5px; background: var(--subtle); }
+  .deck-publisher { font-size: 8px; letter-spacing: 0.1em; color: var(--subtle); text-transform: uppercase; }
+
+  .pull-btn {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 12px 36px;
+    border-radius: 50px;
+    border: 1px solid var(--gold);
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    letter-spacing: 0.06em;
+    transition: background 0.18s, color 0.18s, transform 0.1s;
+    font-family: var(--font-sans);
+  }
+  .pull-btn:hover { background: var(--gold); color: #111; }
+  .pull-btn:active { transform: scale(0.97); }
+
+  .card-screen {
+    width: 100%;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .card-wrap {
+    width: 100%;
+    max-width: 340px;
+    border-radius: 18px;
+    background: var(--card-bg);
+    position: relative;
+    overflow: hidden;
+    padding: 30px 26px 26px;
+    min-height: 440px;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    transform: translateY(20px) scale(0.97);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .card-wrap.in { opacity: 1; transform: translateY(0) scale(1); }
+  .card-wrap.out { opacity: 0; transform: translateY(-12px) scale(0.98); transition: opacity 0.25s ease, transform 0.25s ease; }
+
+  .c-accent { position: absolute; left: 0; top: 0; width: 4px; height: 100%; }
+  .c-border { position: absolute; inset: 12px; border-radius: 9px; pointer-events: none; }
+  .c-num {
+    font-size: 80px;
+    font-weight: 500;
+    color: #222222;
+    position: absolute;
+    right: 18px;
+    top: 14px;
+    font-family: var(--font-serif);
+    line-height: 1;
+    user-select: none;
+  }
+  .c-part {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: auto;
+  }
+  .c-title {
+    font-size: 24px;
+    font-weight: 500;
+    color: var(--cream);
+    font-family: var(--font-serif);
+    line-height: 1.2;
+    margin-bottom: 12px;
+    margin-top: 68px;
+  }
+  .c-divider { width: 36px; height: 1.5px; margin-bottom: 14px; }
+  .c-quote {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    line-height: 1.65;
+    margin-bottom: 22px;
+  }
+  .c-reflect-label {
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+  .c-question {
+    font-size: 12px;
+    color: #BBBBAA;
+    font-style: italic;
+    line-height: 1.65;
+    flex: 1;
+  }
+  .c-brand {
+    font-size: 8px;
+    color: #2E2E2E;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-top: 22px;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+    max-width: 340px;
+    opacity: 0;
+    transition: opacity 0.3s ease 0.35s;
+  }
+  .card-actions.in { opacity: 1; }
+  .act-btn {
+    flex: 1;
+    font-size: 11px;
+    padding: 10px 8px;
+    border-radius: 10px;
+    border: 0.5px solid #2E2E2E;
+    background: #141414;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-family: var(--font-sans);
+  }
+  .act-btn:hover { background: #1E1E1E; color: var(--cream); border-color: #444; }
+  .act-btn i { font-size: 15px; }
+
+  .session-info {
+    font-size: 10px;
+    color: var(--subtle);
+    letter-spacing: 0.06em;
+    margin-top: 4px;
+  }
+
+  .cta-section {
+    width: 100%;
+    max-width: 400px;
+    margin-top: 3.5rem;
+    padding-top: 2.5rem;
+    border-top: 0.5px solid #1E1E1E;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+  }
+  .cta-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--subtle);
+  }
+  .cta-heading {
+    font-size: 20px;
+    font-weight: 500;
+    font-family: var(--font-serif);
+    color: var(--cream);
+    line-height: 1.3;
+  }
+  .cta-sub {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    max-width: 300px;
+  }
+  .cta-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 280px;
+    margin-top: 8px;
+  }
+  .cta-primary {
+    padding: 14px 24px;
+    border-radius: 50px;
+    background: var(--gold);
+    color: #111;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    transition: opacity 0.15s, transform 0.1s;
+    font-family: var(--font-sans);
+  }
+  .cta-primary:hover { opacity: 0.88; }
+  .cta-primary:active { transform: scale(0.97); }
+  .cta-secondary {
+    padding: 12px 24px;
+    border-radius: 50px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    border: 0.5px solid #2E2E2E;
+    cursor: pointer;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+    transition: border-color 0.15s, color 0.15s;
+    font-family: var(--font-sans);
+  }
+  .cta-secondary:hover { color: var(--cream); border-color: #444; }
+
+  .footer {
+    margin-top: 3rem;
+    text-align: center;
+    font-size: 10px;
+    color: var(--subtle);
+    letter-spacing: 0.08em;
+    line-height: 1.8;
+  }
+  .footer a { color: var(--subtle); text-decoration: none; }
+  .footer a:hover { color: var(--muted); }
+
+  .hashtag {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  @media (max-width: 420px) {
+    .page { padding: 2rem 1rem 3rem; }
+    .brand-title { font-size: 26px; }
+    .card-wrap { min-height: 400px; }
+  }
+</style>
+</head>
+<body>
+<main class="page" role="main">
+
+  <header class="brand">
+    <p class="brand-eyebrow">A journey of growth</p>
+    <h1 class="brand-title">Motivate <span class="brand-italic">My Soul</span></h1>
+    <div class="brand-rule"></div>
+    <p class="brand-author">T. Young &nbsp;·&nbsp; Strive Forward Press</p>
+  </header>
+
+  <div class="app-wrap">
+
+    <div class="draw-screen" id="drawScreen">
+      <p class="intro-text">44 cards drawn from the book. Pull one — it might be exactly what you needed to hear today.</p>
+      <div class="deck-stack" id="deckStack" onclick="pullCard()" role="button" aria-label="Pull a card from the Motivate My Soul deck" tabindex="0">
+        <div class="deck-shadow" style="width:176px;height:286px;top:16px;left:7px;opacity:0.35;"></div>
+        <div class="deck-shadow" style="width:178px;height:289px;top:12px;left:6px;opacity:0.55;"></div>
+        <div class="deck-face">
+          <div class="deck-inner"></div>
+          <div class="deck-star">✦</div>
+          <p class="deck-eyebrow">A journey of growth</p>
+          <p class="deck-main">Motivate<br></p>
+          <p class="deck-sub">My Soul</p>
+          <div class="deck-line"></div>
+          <p class="deck-publisher">Strive Forward Press</p>
+        </div>
+      </div>
+      <button class="pull-btn" onclick="pullCard()">Pull a card</button>
+    </div>
+
+    <div class="card-screen" id="cardScreen">
+      <div class="card-wrap" id="cardWrap">
+        <div class="c-accent" id="cAccent"></div>
+        <div class="c-border" id="cBorder"></div>
+        <div class="c-num" id="cNum"></div>
+        <div class="c-part" id="cPart"></div>
+        <div class="c-title" id="cTitle"></div>
+        <div class="c-divider" id="cDivider"></div>
+        <div class="c-quote" id="cQuote"></div>
+        <div class="c-reflect-label" id="cReflectLabel"></div>
+        <div class="c-question" id="cQuestion"></div>
+        <p class="c-brand">Motivate My Soul &nbsp;·&nbsp; T. Young</p>
+      </div>
+      <div class="card-actions" id="cardActions">
+        <button class="act-btn" onclick="pullAgain()" aria-label="Pull another card">
+          <i class="ti ti-refresh" aria-hidden="true"></i> Pull again
+        </button>
+        <button class="act-btn" onclick="shareCard()" id="shareBtn" aria-label="Share this card">
+          <i class="ti ti-share" aria-hidden="true"></i> Share
+        </button>
+        <button class="act-btn" onclick="goToEtsy()" aria-label="Get the full deck">
+          <i class="ti ti-shopping-bag" aria-hidden="true"></i> Get deck
+        </button>
+      </div>
+      <p class="session-info" id="sessionInfo"></p>
+    </div>
+
+  </div>
+
+  <section class="cta-section" aria-label="Get the full deck">
+    <p class="cta-label">Want all 44 cards?</p>
+    <h2 class="cta-heading">Get the full deck</h2>
+    <p class="cta-sub">44 cards. 8 parts. One journey. The physical deck ships with a complete guidebook — or grab the book that started it all.</p>
+    <div class="cta-buttons">
+      <a href="https://motivatemysoul.etsy.com" class="cta-primary" target="_blank" rel="noopener">Get the deck on Etsy</a>
+      <a href="https://a.co/d/06pCwAaW" class="cta-secondary" target="_blank" rel="noopener">Get the book on Amazon</a>
+    </div>
+    <p class="hashtag">#StriveForward</p>
+  </section>
+
+  <footer class="footer">
+    <p>&copy; 2026 T. Young &nbsp;·&nbsp; Strive Forward Press</p>
+    <p><a href="mailto:rytmanagement1@gmail.com">rytmanagement1@gmail.com</a></p>
+  </footer>
+
+</main>
+
+<script>
+const GOLD = '#C9A84C';
+const WHITE = '#E8E8E0';
+
+const cards = [
+  {num:1,  part:'Part I · Control your mind',        title:'The discipline difference',             quote:'Motivation sparks the fire. Discipline keeps it burning.',                                                    question:'Where in your life are you waiting to feel motivated — and what would change if you just started anyway?'},
+  {num:2,  part:'Part I · Control your mind',        title:'The mind is the master',                quote:'Your thoughts don\'t just reflect your life. They build it.',                                                question:'What story are you telling yourself about your life right now — and is it actually true?'},
+  {num:3,  part:'Part I · Control your mind',        title:'Get out of your own way',               quote:'Overthinking is intelligence turned against itself.',                                                         question:'What decision have you been overthinking that your gut already knows the answer to?'},
+  {num:4,  part:'Part I · Control your mind',        title:'Your own worst enemy',                  quote:'That version of you is still available — it\'s just waiting for you to call on it again.',                  question:'What does the best version of you look like — and what\'s one thing you can do today to be that person again?'},
+  {num:5,  part:'Part I · Control your mind',        title:'Choose the day',                        quote:'The choice is made the moment you open your eyes. Make it a good one.',                                      question:'If you decided right now that today was going to be a good day, what would you do differently in the next hour?'},
+  {num:6,  part:'Part II · Pain builds power',       title:'What they don\'t show you',             quote:'The pressure wasn\'t punishing you. It was building you.',                                                   question:'What hard season in your life — the one nobody saw — quietly made you stronger?'},
+  {num:7,  part:'Part II · Pain builds power',       title:'Through the pain',                      quote:'The depth of your pain is often a measure of the strength you haven\'t discovered yet.',                    question:'What are you currently avoiding that you already know you need to walk straight through?'},
+  {num:8,  part:'Part II · Pain builds power',       title:'Survival is strength',                  quote:'You\'re still here. That\'s not nothing. That\'s everything.',                                              question:'What have you survived that you haven\'t fully given yourself credit for?'},
+  {num:9,  part:'Part II · Pain builds power',       title:'Dig deep and rise',                     quote:'You have survived everything life has thrown at you so far. That record doesn\'t lie.',                     question:'When you look in the mirror today, what strength do you see that the hard months have been hiding?'},
+  {num:10, part:'Part II · Pain builds power',       title:'Look in the mirror',                    quote:'Humans are adaptable creatures. We will survive this too — and rise above it.',                             question:'How many times have you fallen and gotten back up — and what does that record say about who you are?'},
+  {num:11, part:'Part II · Pain builds power',       title:'When it feels like the worst',          quote:'The worst moments are not the end of the story. They are often the turning point.',                         question:'If this hard moment is actually a turning point, what is it turning you toward?'},
+  {num:12, part:'Part III · Build your life',        title:'Slow is the speed of real',             quote:'Nothing seems to happen for a long time. Then everything does.',                                             question:'What progress have you been dismissing as nothing that is actually quietly compounding?'},
+  {num:13, part:'Part III · Build your life',        title:'Guard what fuels you',                  quote:'What you allow into your life is what you become. Choose accordingly.',                                      question:'What or who in your life is spending your energy without giving anything back?'},
+  {num:14, part:'Part III · Build your life',        title:'The circle around you',                 quote:'The fastest way to level up isn\'t always a new skill. Sometimes it\'s a new circle.',                     question:'Do the five people you spend the most time with reflect who you\'re trying to become?'},
+  {num:15, part:'Part III · Build your life',        title:'Dust off and keep moving',              quote:'A setback is not a stop sign. It\'s a recalibration.',                                                      question:'What did your last setback teach you that success never could have?'},
+  {num:16, part:'Part III · Build your life',        title:'Never give up on your dreams',          quote:'The dream doesn\'t chase you. You chase the dream.',                                                        question:'What dream have you quietly stopped chasing — and what would it take to start again?'},
+  {num:17, part:'Part III · Build your life',        title:'Discover your gifts',                   quote:'The world needs what you specifically have to offer. Not a diluted version of it.',                         question:'What comes naturally to you that you\'ve been undervaluing because it feels too easy?'},
+  {num:18, part:'Part III · Build your life',        title:'Take the journey',                      quote:'Stop putting off what you want to do and just do it.',                                                       question:'What is one thing you\'ve been putting off that would change how you feel about your life?'},
+  {num:19, part:'Part IV · Live in the moment',      title:'Eyes open',                             quote:'Every day you wake up is a door that didn\'t have to open.',                                                question:'What is one thing about today — right now — that you\'ve been taking for granted?'},
+  {num:20, part:'Part IV · Live in the moment',      title:'Put the phone down',                    quote:'Real life doesn\'t have a like button. It just has the moment, and whether you\'re in it.',                question:'What real moment have you been half-present for lately, and how do you get back to it?'},
+  {num:21, part:'Part IV · Live in the moment',      title:'24 hours',                              quote:'The difference was never about how much time they had. It was about what they decided to do with it.',     question:'If everyone gets the same 24 hours, what would it look like if you used yours differently today?'},
+  {num:22, part:'Part IV · Live in the moment',      title:'Make the moment',                       quote:'You are not stuck. You are just not yet moving in the direction of what you want.',                        question:'What direction do you need to start moving in — and what is one step you can take today?'},
+  {num:23, part:'Part IV · Live in the moment',      title:'Don\'t wait forever',                   quote:'We are here for such a short time. Fully enjoy it.',                                                        question:'What have you been promising yourself you\'d do someday that deserves to become today?'},
+  {num:24, part:'Part V · Let go and grow',          title:'Past, present, future',                 quote:'Memory is a gift. Nostalgia is a trap.',                                                                    question:'What memory are you living inside that is keeping you from being fully present right now?'},
+  {num:25, part:'Part V · Let go and grow',          title:'Close the chapter',                     quote:'You can\'t move to the next chapter if you refuse to close the current one.',                             question:'What chapter of your life do you keep returning to that you already know needs to be closed?'},
+  {num:26, part:'Part V · Let go and grow',          title:'Step away to see clearly',              quote:'Distance isn\'t retreat. Sometimes you have to step back to move forward.',                               question:'What situation in your life would look completely different if you created some distance from it?'},
+  {num:27, part:'Part V · Let go and grow',          title:'You were never the same twice',         quote:'Change isn\'t a flaw in your character. It\'s proof that you\'re alive.',                                 question:'Who have you become in the last year — and are you giving that person enough credit?'},
+  {num:28, part:'Part V · Let go and grow',          title:'Everyone has flaws',                    quote:'Your imperfections are not obstacles to your identity. They are your identity.',                           question:'What imperfection have you been trying to hide that is actually part of what makes you real?'},
+  {num:29, part:'Part V · Let go and grow',          title:'The lifelong student',                  quote:'Your brain is built for more than you\'ve asked it for. Keep asking.',                                    question:'What have you been curious about that you keep pushing aside — and what would happen if you pursued it?'},
+  {num:30, part:'Part V · Let go and grow',          title:'Your own perception',                   quote:'Your perception was earned. It was forged through everything you\'ve been through.',                       question:'Whose opinion have you been valuing more than your own — and what does your own voice actually say?'},
+  {num:31, part:'Part VI · Gratitude & perspective', title:'Step back and appreciate',              quote:'Make yourself as much a priority as you make everything else. You deserve that.',                          question:'What do you have right now that you would miss deeply if it were gone?'},
+  {num:32, part:'Part VI · Gratitude & perspective', title:'Enough is enough',                      quote:'Enough is a decision. It\'s the moment you stop tolerating and start choosing.',                          question:'What have you been tolerating that — if you\'re honest — has gone on long enough?'},
+  {num:33, part:'Part VI · Gratitude & perspective', title:'What getting older teaches you',        quote:'Wisdom isn\'t knowing more. It\'s knowing what actually matters.',                                         question:'What used to stress you out that you now realize wasn\'t worth the energy?'},
+  {num:34, part:'Part VI · Gratitude & perspective', title:'We are not alone',                      quote:'Resilience was never meant to be a solo act.',                                                             question:'Who in your life have you been keeping at a distance when you actually need to let them in?'},
+  {num:35, part:'Part VI · Gratitude & perspective', title:'Life is good',                          quote:'It doesn\'t have to be a perfect day to be a good one. Life is good. Go prove it.',                     question:'What would proving life is good look like for you today — one specific, real thing?'},
+  {num:36, part:'Part VII · Believe in yourself',    title:'Never stop believing',                  quote:'If you don\'t think much of yourself, why would anyone else?',                                            question:'When did you last truly believe in yourself — and what would it take to get back to that feeling?'},
+  {num:37, part:'Part VII · Believe in yourself',    title:'Your own voice first',                  quote:'Your vision for your life matters more than any comment section.',                                         question:'What does your own voice — your real one, not shaped by fear — tell you to do next?'},
+  {num:38, part:'Part VII · Believe in yourself',    title:'The strength you didn\'t know you had', quote:'We are stronger than we realize.',                                                                         question:'What did you get through recently that proves you\'re stronger than you\'ve been giving yourself credit for?'},
+  {num:39, part:'Part VII · Believe in yourself',    title:'Face it head on',                       quote:'Don\'t let the bad days become your permanent address.',                                                   question:'What situation have you been circling around that you already know you need to face directly?'},
+  {num:40, part:'Part VII · Believe in yourself',    title:'Failure is an option. Quitting isn\'t.',quote:'The only version of failure that truly counts is the one where you decide not to get back up.',         question:'What failure have you been treating as a full stop that was actually just a comma?'},
+  {num:41, part:'Part VII · Believe in yourself',    title:'Find the light',                        quote:'The light is always there. Sometimes you have to be still enough — and brave enough — to let it in.',    question:'Where is the light in your life right now — however small — and what would happen if you moved toward it?'},
+  {num:42, part:'Part VIII · Keep going',            title:'Say no more',                           quote:'Sometimes the most powerful thing you can say is: not anymore.',                                           question:'What are you still saying yes to that deserves a firm, clear, final no?'},
+  {num:43, part:'Part VIII · Keep going',            title:'You are not finished',                  quote:'The fact that you\'re still here is not a coincidence. It\'s evidence.',                                 question:'What does the world still need from you that you haven\'t given yet?', white:true},
+  {num:44, part:'Part VIII · Keep going',            title:'Not perfect. Just trying.',             quote:'Is it perfect right now? No. But we are adaptable. And this is the time to do just that — adapt.',      question:'What would it feel like to stop waiting to be ready — and simply keep going, exactly as you are?', white:true},
+];
+
+let pulled = [];
+let current = null;
+
+function getRandom() {
+  if (pulled.length === cards.length) pulled = [];
+  const remaining = cards.filter(c => !pulled.includes(c.num));
+  const card = remaining[Math.floor(Math.random() * remaining.length)];
+  pulled.push(card.num);
+  return card;
+}
+
+function pullCard() {
+  current = getRandom();
+  document.getElementById('drawScreen').style.display = 'none';
+  document.getElementById('cardScreen').style.display = 'flex';
+  renderCard(current, false);
+}
+
+function renderCard(card, isRefresh) {
+  const accent = card.white ? WHITE : GOLD;
+
+  if (isRefresh) {
+    const wrap = document.getElementById('cardWrap');
+    wrap.classList.add('out');
+    setTimeout(() => {
+      wrap.classList.remove('out');
+      fillCard(card, accent);
+      requestAnimationFrame(() => wrap.classList.add('in'));
+    }, 260);
+  } else {
+    fillCard(card, accent);
+    requestAnimationFrame(() => {
+      document.getElementById('cardWrap').classList.add('in');
+      document.getElementById('cardActions').classList.add('in');
+    });
+  }
+
+  document.getElementById('sessionInfo').textContent =
+    pulled.length + ' of 44 cards pulled this session';
+}
+
+function fillCard(card, accent) {
+  document.getElementById('cAccent').style.background = accent;
+  document.getElementById('cBorder').style.border =
+    card.white ? '0.5px solid ' + WHITE : 'none';
+  document.getElementById('cNum').textContent = String(card.num).padStart(2, '0');
+  document.getElementById('cPart').style.color = accent;
+  document.getElementById('cPart').textContent = card.part;
+  document.getElementById('cTitle').textContent = card.title;
+  document.getElementById('cDivider').style.background = accent;
+  document.getElementById('cQuote').textContent = '\u201C' + card.quote + '\u201D';
+  document.getElementById('cReflectLabel').style.color = accent;
+  document.getElementById('cReflectLabel').textContent = 'Reflect';
+  document.getElementById('cQuestion').textContent = card.question;
+}
+
+function pullAgain() {
+  current = getRandom();
+  document.getElementById('cardActions').classList.remove('in');
+  renderCard(current, true);
+  setTimeout(() => document.getElementById('cardActions').classList.add('in'), 500);
+}
+
+function shareCard() {
+  if (!current) return;
+  const text = 'Card ' + current.num + ': ' + current.title +
+    '\n\n\u201C' + current.quote + '\u201D' +
+    '\n\n\u2014 Motivate My Soul by T. Young\n#StriveForward';
+  if (navigator.share) {
+    navigator.share({ title: 'Motivate My Soul', text: text });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() {
+      var btn = document.getElementById('shareBtn');
+      var orig = btn.innerHTML;
+      btn.innerHTML = '<i class="ti ti-check" aria-hidden="true"></i> Copied!';
+      setTimeout(function() { btn.innerHTML = orig; }, 2000);
+    });
+  }
+}
+
+function goToEtsy() {
+  window.open('https://motivatemysoul.etsy.com', '_blank', 'noopener');
+}
+
+document.getElementById('deckStack').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pullCard(); }
+});
+</script>
+</body>
+</html>
